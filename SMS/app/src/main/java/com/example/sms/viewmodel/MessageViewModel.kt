@@ -1,10 +1,11 @@
-package com.example.sms
+package com.example.sms.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.sms.db.Message
+import com.example.sms.db.MessageRepository
 import kotlinx.coroutines.launch
 
 class MessageViewModel(

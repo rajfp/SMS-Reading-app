@@ -1,4 +1,4 @@
-package com.example.sms
+package com.example.sms.activity
 
 import android.Manifest
 import android.content.Intent
@@ -7,33 +7,44 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.sms.*
+import com.example.sms.adapter.MessageAdapter
+import com.example.sms.db.ActivityModule
+import com.example.sms.db.Message
+import com.example.sms.di.DaggerActivityComponent
+import com.example.sms.listener.MessageListener
+import com.example.sms.receiver.MessageReceiver
+import com.example.sms.viewmodel.MessageViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import java.time.LocalDateTime
+import javax.inject.Inject
 
-class MainActivity : AppCompatActivity(), MessageListener {
+class MainActivity : AppCompatActivity(),
+    MessageListener {
 
-    private val messageReceiver = MessageReceiver()
+    @Inject
+    lateinit var messageReceiver: MessageReceiver
+
     private var msgList = ArrayList<Message>()
+
     private lateinit var messageAdapter: MessageAdapter
-    private lateinit var messageViewModel: MessageViewModel
+
+    @Inject
+    lateinit var messageViewModel: MessageViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         checkPermission()
+        DaggerActivityComponent.builder()
+            .activityModule(ActivityModule(this))
+            .applicationComponent((application as MyApplication).applicationComponent).build()
+            .inject(this)
         messageReceiver.bindListener(this)
-        val repository = MessageRepository(AppDatabase(this))
-        val viewModelProviderFactory = MessageViewModelProviderFactory(application, repository)
-        messageViewModel =
-            ViewModelProvider(this, viewModelProviderFactory).get(MessageViewModel::class.java)
         messageViewModel.fetchMessages()
         setObservers()
     }
@@ -46,7 +57,8 @@ class MainActivity : AppCompatActivity(), MessageListener {
 
     fun setRecyclerView(list: ArrayList<Message>) {
         msgList = list
-        messageAdapter = MessageAdapter(this, list)
+        messageAdapter = MessageAdapter()
+        messageAdapter.submitList(list)
         recycler_view.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             recycler_view.adapter = messageAdapter
@@ -89,10 +101,26 @@ class MainActivity : AppCompatActivity(), MessageListener {
         }
     }
 
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getMessage(message: String) {
-        msgList.add(Message(message = message, time = LocalDateTime.now()))
-        messageViewModel.saveMessage(Message(message = message, time = LocalDateTime.now()))
+        msgList.add(
+            Message(
+                message = message,
+                time = LocalDateTime.now()
+            )
+        )
+        messageViewModel.saveMessage(
+            Message(
+                message = message,
+                time = LocalDateTime.now()
+            )
+        )
         messageAdapter.notifyDataSetChanged()
     }
 }

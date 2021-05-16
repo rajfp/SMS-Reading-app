@@ -1,4 +1,4 @@
-package com.example.sms
+package com.example.sms.db
 
 import android.os.Build
 import androidx.room.TypeConverter

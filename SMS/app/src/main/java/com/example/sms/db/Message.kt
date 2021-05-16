@@ -1,4 +1,4 @@
-package com.example.sms
+package com.example.sms.db
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -12,4 +12,17 @@ data class Message(
     //@ColumnInfo(name = "first_name") val firstName: String?,
     @ColumnInfo(name = "message") val message: String?,
     @ColumnInfo(name = "time") val time: LocalDateTime?
-):Serializable
+) : Serializable {
+    override fun equals(other: Any?): Boolean {
+        if (javaClass != other?.javaClass)
+            return false
+        other as Message
+        if (uid != other.uid)
+            return false
+        if (message != other.message)
+            return false
+        if (time != other.time)
+            return false
+        return true
+    }
+}
