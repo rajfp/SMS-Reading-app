@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity(),
     fun setRecyclerView(list: ArrayList<Message>) {
         msgList = list
         messageAdapter = MessageAdapter()
-        messageAdapter.submitList(list)
+        messageAdapter.differ.submitList(msgList.toList())
         recycler_view.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             recycler_view.adapter = messageAdapter
@@ -101,26 +101,36 @@ class MainActivity : AppCompatActivity(),
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         setIntent(intent)
+        intent?.getStringExtra("body")?.let {
+            updateData(it)
+        }
 
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun getMessage(message: String) {
+        updateData(message)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun updateData(message: String) {
         msgList.add(
             Message(
                 message = message,
                 time = LocalDateTime.now()
             )
         )
+
         messageViewModel.saveMessage(
             Message(
                 message = message,
                 time = LocalDateTime.now()
             )
         )
-        messageAdapter.notifyDataSetChanged()
+        messageAdapter.differ.submitList(msgList.toList())
     }
 }

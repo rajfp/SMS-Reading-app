@@ -18,7 +18,6 @@ class MessageReceiver : BroadcastReceiver() {
             }
 
         }
-
     }
 
     fun bindListener(messageListener: MessageListener) {
